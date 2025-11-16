@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Flowchart Designer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #0f1218;
+    --panel: #161a22;
+    --accent: #3a7afe;
+    --accent-2: #22c55e;
+    --text: #e6e8ea;
+    --muted: #9aa3ad;
+    --grid: #232834;
+    --shape: #1e2532;
+    --shape-stroke: #3c4454;
+    --connector: #cbd5e1;
+    --select: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+  #app { display: grid; grid-template-columns: 280px 1fr; grid-template-rows: 48px 1fr; height: 100%; }
+  header { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; background: var(--panel); padding: 8px 12px; border-bottom: 1px solid #202635; }
+  header .title { font-weight: 600; letter-spacing: 0.2px; }
+  header .spacer { flex: 1; }
+  header button, header input, header select { background: #0d1117; color: var(--text); border: 1px solid #263042; padding: 6px 10px; border-radius: 6px; font-size: 13px; }
+  header button:hover { border-color: var(--accent); }
+  aside { background: var(--panel); border-right: 1px solid #202635; padding: 12px; overflow: auto; }
+  aside h3 { margin: 8px 0 12px; font-size: 14px; color: var(--muted); }
+  .tool-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .tool { background: #0d1117; border: 1px solid #263042; border-radius: 8px; padding: 10px; text-align: center; font-size: 13px; cursor: pointer; }
+  .tool.active { border-color: var(--accent); color: var(--accent); }
+  .tool.large { grid-column: span 2; }
+  .prop { display: grid; gap: 8px; margin-top: 12px; }
+  .prop label { font-size: 12px; color: var(--muted); }
+  .prop input, .prop select { background: #0d1117; color: var(--text); border: 1px solid #263042; padding: 6px 10px; border-radius: 6px; font-size: 13px; }
+  main { position: relative; overflow: hidden; }
+  #canvas-wrap { position: absolute; inset: 0; background:
+     linear-gradient(var(--grid) 1px, transparent 1px),
+     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+     background-size: 24px 24px, 24px 24px;
+     background-position: 0 0, 0 0;
+  }
+  #svg { width: 100%; height: 100%; touch-action: none; }
+  /* Shapes */
+  .node { cursor: move; }
+  .node rect, .node ellipse, .node polygon { fill: var(--shape); stroke: var(--shape-stroke); stroke-width: 2; }
+  .node.selected rect, .node.selected ellipse, .node.selected polygon { stroke: var(--select); }
+  .label { fill: var(--text); font-size: 12px; pointer-events: none; user-select: none; }
+  /* Connectors */
+  .conn path { stroke: var(--connector); stroke-width: 2; fill: none; }
+  .conn marker path { fill: var(--connector); }
+  .conn.selected path { stroke: var(--select); }
+  .handle { fill: #0d1117; stroke: var(--select); stroke-width: 1.5; pointer-events: all; cursor: nwse-resize; }
+  .port { fill: var(--accent-2); stroke: #0d1117; stroke-width: 1; r: 4; pointer-events: all; cursor: crosshair; opacity: 0; }
+  .node:hover .port { opacity: 1; }
+  /* Guides */
+  .guide { stroke: #7c3aed; stroke-width: 1; stroke-dasharray: 4 4; }
+  /* Mini-map */
+  #minimap { position: absolute; right: 12px; bottom: 12px; background: #0d1117; border: 1px solid #263042; width: 160px; height: 120px; border-radius: 6px; }
+  #minimap svg { width: 100%; height: 100%; }
+  /* Toast */
+  #toast { position: absolute; left: 12px; bottom: 12px; background: #101522; border: 1px solid #263042; color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; opacity: 0; transition: opacity .2s; }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title">Flowchart Designer</div>
+    <div class="spacer"></div>
+    <label style="font-size:12px;color:var(--muted)">Zoom</label>
+    <input type="range" id="zoom" min="20" max="300" value="100" />
+    <button id="btn-fit">Fit</button>
+    <button id="btn-reset">Reset view</button>
+    <button id="btn-save">Save</button>
+    <button id="btn-load">Load</button>
+    <button id="btn-export">Export PNG</button>
+  </header>
+
+  <aside>
+    <h3>Tools</h3>
+    <div class="tool-group" id="tools">
+      <div class="tool active" data-tool="select">Select</div>
+      <div class="tool" data-tool="pan">Pan</div>
+      <div class="tool" data-tool="connector">Connector</div>
+      <div class="tool large" data-tool="text">Text</div>
+      <div class="tool" data-tool="rectangle">Rectangle</div>
+      <div class="tool" data-tool="diamond">Diamond</div>
+      <div class="tool" data-tool="ellipse">Ellipse</div>
+      <div class="tool" data-tool="terminator">Terminator</div>
+      <div class="tool" data-tool="parallelogram">Parallelogram</div>
+      <div class="tool" data-tool="decision">Decision</div>
+    </div>
+
+    <h3>Properties</h3>
+    <div class="prop">
+      <label>Fill</label>
+      <input id="prop-fill" type="color" value="#1e2532" />
+      <label>Stroke</label>
+      <input id="prop-stroke" type="color" value="#3c4454" />
+      <label>Text</label>
+      <input id="prop-text" type="text" placeholder="Label..." />
+      <label>Text size</label>
+      <input id="prop-size" type="number" min="8" max="32" value="12" />
+      <label>Snap to grid</label>
+      <select id="prop-snap">
+        <option value="24" selected>24 px</option>
+        <option value="12">12 px</option>
+        <option value="8">8 px</option>
+        <option value="0">Off</option>
+      </select>
+    </div>
+  </aside>
+
+  <main>
+    <div id="canvas-wrap">
+      <svg id="svg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" />
+          </marker>
+        </defs>
+        <g id="viewport" transform="translate(0,0) scale(1)">
+          <g id="guides"></g>
+          <g id="edges"></g>
+          <g id="nodes"></g>
+          <g id="overlays"></g>
+        </g>
+      </svg>
+    </div>
+    <div id="minimap"><svg id="minimap-svg"></svg></div>
+    <div id="toast"></div>
+  </main>
+</div>
+
+<script>
+(function(){
+  const svg = document.getElementById('svg');
+  const viewport = document.getElementById('viewport');
+  const gNodes = document.getElementById('nodes');
+  const gEdges = document.getElementById('edges');
+  const gGuides = document.getElementById('guides');
+  const gOverlays = document.getElementById('overlays');
+  const toolsEl = document.getElementById('tools');
+  const zoomEl = document.getElementById('zoom');
+  const toast = document.getElementById('toast');
+
+  const propFill = document.getElementById('prop-fill');
+  const propStroke = document.getElementById('prop-stroke');
+  const propText = document.getElementById('prop-text');
+  const propSize = document.getElementById('prop-size');
+  const propSnap = document.getElementById('prop-snap');
+
+  const btnFit = document.getElementById('btn-fit');
+  const btnReset = document.getElementById('btn-reset');
+  const btnSave = document.getElementById('btn-save');
+  const btnLoad = document.getElementById('btn-load');
+  const btnExport = document.getElementById('btn-export');
+
+  let state = {
+    tool: 'select',
+    nodes: new Map(),   // id -> {type,x,y,w,h,fill,stroke,text,size,ports}
+    edges: new Map(),   // id -> {from, to, points}
+    selected: null,     // {type:'node'|'edge', id}
+    dragging: null,     // {id, ox, oy, startX, startY}
+    resizing: null,     // {id, handle, startW, startH, startX, startY}
+    connecting: null,   // {fromNodeId}
+    zoom: 1,
+    tx: 0, ty: 0,
+    snap: 24
+  };
+
+  // Utility
+  const uid = () => Math.random().toString(36).slice(2,9);
+  const showToast = (msg) => {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(()=> toast.classList.remove('show'), 1200);
+  };
+
+  const viewToLocal = (x,y) => {
+    // Convert screen coords to viewport coords (accounting for transform)
+    const pt = svg.createSVGPoint();
+    pt.x = x; pt.y = y;
+    const m = viewport.getScreenCTM().inverse();
+    const p = pt.matrixTransform(m);
+    return {x: p.x, y: p.y};
+  };
+
+  const snap = (v) => (state.snap > 0 ? Math.round(v / state.snap) * state.snap : v);
+
+  // Tool switching
+  toolsEl.addEventListener('click', (e) => {
+    const toolEl = e.target.closest('.tool');
+    if (!toolEl) return;
+    toolsEl.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
+    toolEl.classList.add('active');
+    state.tool = toolEl.dataset.tool;
+    showToast('Tool: ' + state.tool);
+  });
+
+  propSnap.addEventListener('change', () => {
+    state.snap = parseInt(propSnap.value, 10);
+    showToast(state.snap ? `Snap: ${state.snap}px` : 'Snap: off');
+  });
+
+  // Zoom & Pan
+  const applyView = () => {
+    viewport.setAttribute('transform', `translate(${state.tx},${state.ty}) scale(${state.zoom})`);
+    drawMinimap();
+  };
+
+  zoomEl.addEventListener('input', () => {
+    state.zoom = parseInt(zoomEl.value, 10) / 100;
+    applyView();
+  });
+
+  let panning = null;
+  svg.addEventListener('pointerdown', (e) => {
+    if (state.tool !== 'pan') return;
+    svg.setPointerCapture(e.pointerId);
+    panning = {sx: e.clientX, sy: e.clientY, tx: state.tx, ty: state.ty};
+  });
+  svg.addEventListener('pointermove', (e) => {
+    if (!panning) return;
+    const dx = e.clientX - panning.sx;
+    const dy = e.clientY - panning.sy;
+    state.tx = panning.tx + dx;
+    state.ty = panning.ty + dy;
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = null; });
+
+  // Node creation
+  const createNode = (type, x, y) => {
+    const id = uid();
+    const w = 120, h = 60;
+    const node = { id, type, x: snap(x), y: snap(y), w, h,
+      fill: propFill.value, stroke: propStroke.value,
+      text: 'Label', size: parseInt(propSize.value, 10)
+    };
+    state.nodes.set(id, node);
+    renderNode(node);
+    select({type: 'node', id});
+    return node;
+  };
+
+  // Node geometry
+  const nodePorts = (n) => {
+    const cx = n.x + n.w/2, cy = n.y + n.h/2;
+    return [
+      {id:'top', x: cx, y: n.y},
+      {id:'right', x: n.x + n.w, y: cy},
+      {id:'bottom', x: cx, y: n.y + n.h},
+      {id:'left', x: n.x, y: cy}
+    ];
+  };
+
+  // Node DOM
+  const renderNode = (n) => {
+    let g = document.getElementById('node-' + n.id);
+    if (!g) {
+      g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('node');
+      g.setAttribute('id', 'node-' + n.id);
+      gNodes.appendChild(g);
+
+      // Shape element
+      let shape;
+      if (n.type === 'rectangle' || n.type === 'terminator' || n.type === 'parallelogram') {
+        shape = document.createElementNS(svg.namespaceURI, 'rect');
+        g.appendChild(shape);
+      } else if (n.type === 'ellipse') {
+        shape = document.createElementNS(svg.namespaceURI, 'ellipse');
+        g.appendChild(shape);
+      } else if (n.type === 'diamond' || n.type === 'decision') {
+        shape = document.createElementNS(svg.namespaceURI, 'polygon');
+        g.appendChild(shape);
+      }
+
+      // Label
+      const label = document.createElementNS(svg.namespaceURI, 'text');
+      label.classList.add('label');
+      label.setAttribute('id', 'label-' + n.id);
+      g.appendChild(label);
+
+      // Ports
+      ['top','right','bottom','left'].forEach(p => {
+        const port = document.createElementNS(svg.namespaceURI, 'circle');
+        port.classList.add('port');
+        port.setAttribute('id', `port-${n.id}-${p}`);
+        port.addEventListener('pointerdown', (e) => startConnect(e, n.id));
+        g.appendChild(port);
+      });
+
+      // Resize handle
+      const handle = document.createElementNS(svg.namespaceURI, 'rect');
+      handle.classList.add('handle');
+      handle.setAttribute('id', 'handle-' + n.id);
+      handle.setAttribute('width', 10);
+      handle.setAttribute('height', 10);
+      handle.addEventListener('pointerdown', (e) => startResize(e, n.id));
+      g.appendChild(handle);
+
+      // Dragging
+      g.addEventListener('pointerdown', (e) => startDrag(e, n.id));
+      g.addEventListener('dblclick', () => inlineEdit(n.id));
+    }
+
+    // Apply geometry
+    const shape = g.children[0];
+    const label = document.getElementById('label-' + n.id);
+    const handle = document.getElementById('handle-' + n.id);
+
+    const x = n.x, y = n.y, w = n.w, h = n.h;
+
+    if (n.type === 'rectangle') {
+      shape.setAttribute('x', x); shape.setAttribute('y', y);
+      shape.setAttribute('rx', 6); shape.setAttribute('ry', 6);
+      shape.setAttribute('width', w); shape.setAttribute('height', h);
+    } else if (n.type === 'terminator') {
+      shape.setAttribute('x', x); shape.setAttribute('y', y);
+      shape.setAttribute('rx', h/2); shape.setAttribute('ry', h/2);
+      shape.setAttribute('width', w); shape.setAttribute('height', h);
+    } else if (n.type === 'parallelogram') {
+      const s = Math.min(20, w/4);
+      shape.setAttribute('x', x); shape.setAttribute('y', y);
+      shape.setAttribute('width', w); shape.setAttribute('height', h);
+      shape.setAttribute('transform', `skewX(-15) translate(${s},0)`);
+    } else if (n.type === 'ellipse') {
+      shape.setAttribute('cx', x + w/2); shape.setAttribute('cy', y + h/2);
+      shape.setAttribute('rx', w/2); shape.setAttribute('ry', h/2);
+    } else if (n.type === 'diamond' || n.type === 'decision') {
+      const pts = [
+        [x + w/2, y],
+        [x + w, y + h/2],
+        [x + w/2, y + h],
+        [x, y + h/2]
+      ].map(p => p.join(',')).join(' ');
+      shape.setAttribute('points', pts);
+    }
+
+    shape.setAttribute('fill', n.fill);
+    shape.setAttribute('stroke', n.stroke);
+
+    label.setAttribute('x', x + w/2);
+    label.setAttribute('y', y + h/2 + n.size/2 - 2);
+    label.setAttribute('text-anchor', 'middle');
+    label.textContent = n.text ?? '';
+    label.setAttribute('font-size', n.size);
+
+    // Ports
+    const ports = nodePorts(n);
+    ports.forEach(p => {
+      const el = document.getElementById(`port-${n.id}-${p.id}`);
+      el.setAttribute('cx', p.x);
+      el.setAttribute('cy', p.y);
+      el.setAttribute('r', 4);
+    });
+
+    // Handle
+    handle.setAttribute('x', x + w - 5);
+    handle.setAttribute('y', y + h - 5);
+
+    updateEdgesForNode(n.id);
+  };
+
+  // Selection
+  const select = (sel) => {
+    // Clear previous
+    gNodes.querySelectorAll('.node').forEach(e => e.classList.remove('selected'));
+    gEdges.querySelectorAll('.conn').forEach(e => e.classList.remove('selected'));
+    state.selected = sel;
+    if (!sel) return;
+    if (sel.type === 'node') {
+      const g = document.getElementById('node-' + sel.id);
+      g.classList.add('selected');
+      const n = state.nodes.get(sel.id);
+      propFill.value = toHex(n.fill);
+      propStroke.value = toHex(n.stroke);
+      propText.value = n.text || '';
+      propSize.value = n.size;
+    } else if (sel.type === 'edge') {
+      const g = document.getElementById('edge-' + sel.id);
+      g.classList.add('selected');
+    }
+  };
+
+  // Color normalization for inputs
+  function toHex(c) {
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.fillStyle = c; return ctx.fillStyle;
+  }
+
+  // Apply property changes
+  propFill.addEventListener('input', () => {
+    if (!state.selected || state.selected.type !== 'node') return;
+    const n = state.nodes.get(state.selected.id);
+    n.fill = propFill.value;
+    renderNode(n);
+  });
+  propStroke.addEventListener('input', () => {
+    if (!state.selected || state.selected.type !== 'node') return;
+    const n = state.nodes.get(state.selected.id);
+    n.stroke = propStroke.value;
+    renderNode(n);
+  });
+  propText.addEventListener('input', () => {
+    if (!state.selected || state.selected.type !== 'node') return;
+    const n = state.nodes.get(state.selected.id);
+    n.text = propText.value;
+    renderNode(n);
+  });
+  propSize.addEventListener('input', () => {
+    if (!state.selected || state.selected.type !== 'node') return;
+    const n = state.nodes.get(state.selected.id);
+    n.size = parseInt(propSize.value, 10);
+    renderNode(n);
+  });
+
+  // Dragging
+  function startDrag(e, id) {
+    if (state.tool !== 'select') { select({type:'node', id}); return; }
+    e.stopPropagation();
+    const n = state.nodes.get(id);
+    svg.setPointerCapture(e.pointerId);
+    state.dragging = { id, ox: n.x, oy: n.y, startX: e.clientX, startY: e.clientY };
+  }
+  svg.addEventListener('pointermove', (e) => {
+    if (!state.dragging) return;
+    const d = state.dragging;
+    const dx = (e.clientX - d.startX) / state.zoom;
+    const dy = (e.clientY - d.startY) / state.zoom;
+    const nx = snap(d.ox + dx), ny = snap(d.oy + dy);
+    const n = state.nodes.get(d.id);
+    n.x = nx; n.y = ny;
+    renderNode(n);
+    drawGuides(n);
+  });
+  svg.addEventListener('pointerup', () => {
+    if (state.dragging) { gGuides.innerHTML = ''; state.dragging = null; }
+    if (state.resizing) { gGuides.innerHTML = ''; state.resizing = null; }
+    if (state.connecting) { state.connecting = null; }
+  });
+
+  // Resize
+  function startResize(e, id) {
+    if (state.tool !== 'select') return;
+    e.stopPropagation();
+    const n = state.nodes.get(id);
+    svg.setPointerCapture(e.pointerId);
+    state.resizing = { id, startW: n.w, startH: n.h, startX: e.clientX, startY: e.clientY };
+  }
+  svg.addEventListener('pointermove', (e) => {
+    if (!state.resizing) return;
+    const r = state.resizing;
+    const dw = (e.clientX - r.startX) / state.zoom;
+    const dh = (e.clientY - r.startY) / state.zoom;
+    const n = state.nodes.get(r.id);
+    n.w = Math.max(40, snap(r.startW + dw));
+    n.h = Math.max(24, snap(r.startH + dh));
+    renderNode(n);
+    drawGuides(n);
+  });
+
+  // Inline edit label
+  function inlineEdit(id) {
+    const n = state.nodes.get(id);
+    const {x,y,w,h} = n;
+    const foreign = document.createElementNS(svg.namespaceURI, 'foreignObject');
+    foreign.setAttribute('x', x + 6);
+    foreign.setAttribute('y', y + 6);
+    foreign.setAttribute('width', w - 12);
+    foreign.setAttribute('height', h - 12);
+    const div = document.createElement('div');
+    div.contentEditable = 'true';
+    div.style.cssText = 'width:100%;height:100%;outline:none;background:transparent;color:white;font:12px/1.4 system-ui;padding:4px;border:1px dashed #3a7afe;border-radius:4px;';
+    div.textContent = n.text || '';
+    foreign.appendChild(div);
+    gOverlays.appendChild(foreign);
+    div.focus();
+    const finish = () => {
+      n.text = div.textContent;
+      renderNode(n);
+      gOverlays.removeChild(foreign);
+    };
+    div.addEventListener('blur', finish);
+    div.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); finish(); } });
+  }
+
+  // Connectors
+  function startConnect(e, fromId) {
+    if (state.tool !== 'connector') return;
+    e.stopPropagation();
+    state.connecting = {fromNodeId: fromId};
+    select({type:'node', id: fromId});
+    showToast('Click another node to connect');
+  }
+
+  svg.addEventListener('pointerdown', (e) => {
+    if (state.tool === 'connector' && state.connecting) {
+      const target = e.target.closest('.node');
+      if (target) {
+        const toId = target.id.replace('node-','');
+        if (toId !== state.connecting.fromNodeId) {
+          createEdge(state.connecting.fromNodeId, toId);
+          state.connecting = null;
+        }
+      }
+    } else if (state.tool.startsWith('rect') || ['diamond','ellipse','terminator','parallelogram','decision'].includes(state.tool)) {
+      const p = viewToLocal(e.clientX, e.clientY);
+      createNode(state.tool, p.x - 60, p.y - 30);
+    } else if (state.tool === 'select') {
+      const edgeEl = e.target.closest('.conn');
+      const nodeEl = e.target.closest('.node');
+      if (edgeEl) select({type:'edge', id: edgeEl.id.replace('edge-','')});
+      else if (nodeEl) select({type:'node', id: nodeEl.id.replace('node-','')});
+      else select(null);
+    }
+  });
+
+  const orthogonal = (p1, p2) => {
+    const midX = (p1.x + p2.x)/2;
+    return `M ${p1.x} ${p1.y} L ${midX} ${p1.y} L ${midX} ${p2.y} L ${p2.x} ${p2.y}`;
+  };
+
+  function createEdge(fromId, toId) {
+    const id = uid();
+    const fromPorts = nodePorts(state.nodes.get(fromId));
+    const toPorts = nodePorts(state.nodes.get(toId));
+    const p1 = fromPorts[2]; // bottom
+    const p2 = toPorts[0];   // top
+    const d = orthogonal(p1, p2);
+    const edge = { id, from: fromId, to: toId, d };
+    state.edges.set(id, edge);
+    renderEdge(edge);
+    select({type:'edge', id});
+  }
+
+  function renderEdge(e) {
+    let g = document.getElementById('edge-' + e.id);
+    if (!g) {
+      g = document.createElementNS(svg.namespaceURI, 'g');
+      g.classList.add('conn');
+      g.setAttribute('id', 'edge-' + e.id);
+      const path = document.createElementNS(svg.namespaceURI, 'path');
+      path.setAttribute('marker-end', 'url(#arrow)');
+      g.appendChild(path);
+      gEdges.appendChild(g);
+      g.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); select({type:'edge', id: e.id}); });
+    }
+    const path = g.children[0];
+    path.setAttribute('d', e.d);
+  }
+
+  function updateEdgesForNode(nodeId) {
+    state.edges.forEach(e => {
+      if (e.from === nodeId || e.to === nodeId) {
+        // Simple recompute: bottom->top again
+        const fromPorts = nodePorts(state.nodes.get(e.from));
+        const toPorts = nodePorts(state.nodes.get(e.to));
+        // Choose nearest ports based on positions
+        const from = pickPort(fromPorts, state.nodes.get(e.from), state.nodes.get(e.to));
+        const to = pickPort(toPorts, state.nodes.get(e.to), state.nodes.get(e.from));
+        e.d = orthogonal(from, to);
+        renderEdge(e);
+      }
+    });
+    drawMinimap();
+  }
+
+  function pickPort(ports, self, other) {
+    const sx = self.x + self.w/2, sy = self.y + self.h/2;
+    const ox = other.x + other.w/2, oy = other.y + other.h/2;
+    const dx = ox - sx, dy = oy - sy;
+    if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? ports.find(p=>p.id==='right') : ports.find(p=>p.id==='left');
+    return dy > 0 ? ports.find(p=>p.id==='bottom') : ports.find(p=>p.id==='top');
+  }
+
+  // Guides: show alignment lines with nearest nodes
+  function drawGuides(n) {
+    gGuides.innerHTML = '';
+    state.nodes.forEach(m => {
+      if (m.id === n.id) return;
+      const lines = [];
+      // vertical center align
+      const nx = n.x + n.w/2, mx = m.x + m.w/2;
+      if (Math.abs(nx - mx) <= (state.snap || 8)) lines.push(['v', mx]);
+      // horizontal center align
+      const ny = n.y + n.h/2, my = m.y + m.h/2;
+      if (Math.abs(ny - my) <= (state.snap || 8)) lines.push(['h', my]);
+      lines.forEach(([t,val]) => {
+        const el = document.createElementNS(svg.namespaceURI, 'line');
+        el.classList.add('guide');
+        if (t === 'v') { el.setAttribute('x1', val); el.setAttribute('x2', val); el.setAttribute('y1', -9999); el.setAttribute('y2', 9999); }
+        else { el.setAttribute('y1', val); el.setAttribute('y2', val); el.setAttribute('x1', -9999); el.setAttribute('x2', 9999); }
+        gGuides.appendChild(el);
+      });
+    });
+  }
+
+  // Save / Load
+  btnSave.addEventListener('click', () => {
+    const data = {
+      nodes: Array.from(state.nodes.values()),
+      edges: Array.from(state.edges.values()),
+      view: { zoom: state.zoom, tx: state.tx, ty: state.ty, snap: state.snap }
+    };
+    const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'flowchart.json'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Saved');
+  });
+
+  btnLoad.addEventListener('click', async () => {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.json,application/json';
+    input.onchange = async () => {
+      const file = input.files[0];
+      const text = await file.text();
+      const data = JSON.parse(text);
+      // Reset
+      state.nodes.clear(); state.edges.clear();
+      gNodes.innerHTML = ''; gEdges.innerHTML = ''; gGuides.innerHTML = '';
+      (data.nodes || []).forEach(n => { state.nodes.set(n.id, n); renderNode(n); });
+      (data.edges || []).forEach(e => { state.edges.set(e.id, e); renderEdge(e); });
+      if (data.view) { state.zoom = data.view.zoom || 1; state.tx = data.view.tx || 0; state.ty = data.view.ty || 0; state.snap = data.view.snap ?? 24; propSnap.value = String(state.snap); zoomEl.value = String(Math.round(state.zoom * 100)); applyView(); }
+      showToast('Loaded');
+    };
+    input.click();
+  });
+
+  // Export PNG
+  btnExport.addEventListener('click', async () => {
+    const serializer = new XMLSerializer();
+    const clone = svg.cloneNode(true);
+    // Remove overlays/guides for export
+    const vp = clone.querySelector('#viewport');
+    vp.querySelector('#guides').innerHTML = '';
+    vp.querySelector('#overlays').innerHTML = '';
+
+    const svgStr = serializer.serializeToString(clone);
+    const b64 = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const rect = svg.getBoundingClientRect();
+      canvas.width = rect.width; canvas.height = rect.height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg');
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'flowchart.png'; a.click();
+        URL.revokeObjectURL(url);
+        showToast('Exported PNG');
+      });
+    };
+    img.src = b64;
+  });
+
+  // Fit and reset
+  btnFit.addEventListener('click', () => {
+    const bbox = viewport.getBBox();
+    const rect = svg.getBoundingClientRect();
+    const scale = Math.min(rect.width / (bbox.width+40), rect.height / (bbox.height+40));
+    state.zoom = Math.max(0.2, Math.min(3, scale));
+    state.tx = (rect.width - bbox.width * state.zoom)/2 - bbox.x * state.zoom;
+    state.ty = (rect.height - bbox.height * state.zoom)/2 - bbox.y * state.zoom;
+    zoomEl.value = String(Math.round(state.zoom * 100));
+    applyView();
+  });
+
+  btnReset.addEventListener('click', () => {
+    state.zoom = 1; state.tx = 0; state.ty = 0;
+    zoomEl.value = '100';
+    applyView();
+  });
+
+  // Minimap
+  function drawMinimap() {
+    const msvg = document.getElementById('minimap-svg');
+    msvg.innerHTML = '';
+    const view = viewport.getBBox();
+    const mmW = msvg.clientWidth || 160, mmH = msvg.clientHeight || 120;
+    const scale = Math.min(mmW / (view.width+40), mmH / (view.height+40));
+    const ox = -view.x * scale + (mmW - view.width*scale)/2;
+    const oy = -view.y * scale + (mmH - view.height*scale)/2;
+
+    const group = document.createElementNS(svg.namespaceURI, 'g');
+    group.setAttribute('transform', `translate(${ox},${oy}) scale(${scale})`);
+    msvg.appendChild(group);
+
+    // Nodes as rectangles for preview
+    state.nodes.forEach(n => {
+      const r = document.createElementNS(svg.namespaceURI, 'rect');
+      r.setAttribute('x', n.x); r.setAttribute('y', n.y);
+      r.setAttribute('width', n.w); r.setAttribute('height', n.h);
+      r.setAttribute('fill', '#344056'); r.setAttribute('stroke', '#4b5563'); r.setAttribute('stroke-width', 1);
+      group.appendChild(r);
+    });
+
+    // Edges as paths
+    state.edges.forEach(e => {
+      const p = document.createElementNS(svg.namespaceURI, 'path');
+      p.setAttribute('d', e.d); p.setAttribute('stroke', '#9aa3ad'); p.setAttribute('fill', 'none'); p.setAttribute('stroke-width', 1);
+      group.appendChild(p);
+    });
+  }
+
+  // Text tool (quick labels)
+  svg.addEventListener('dblclick', (e) => {
+    if (state.tool !== 'text') return;
+    const p = viewToLocal(e.clientX, e.clientY);
+    const id = uid();
+    const n = { id, type:'rectangle', x: snap(p.x-50), y: snap(p.y-18), w: 100, h: 36, fill:'#0d1117', stroke:'#263042', text:'Text', size:14 };
+    state.nodes.set(id, n);
+    renderNode(n);
+    inlineEdit(id);
+    select({type:'node', id});
+  });
+
+  // Initialize with a starter diagram
+  const startA = createNode('terminator', 120, 120); startA.text = 'Start'; renderNode(startA);
+  const stepB = createNode('rectangle', 120, 240); stepB.text = 'Process'; renderNode(stepB);
+  const stepC = createNode('decision', 320, 240); stepC.text = 'Decision?'; renderNode(stepC);
+  createEdge(startA.id, stepB.id);
+  createEdge(stepB.id, stepC.id);
+  applyView();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block start %}
+<div class="container mt-4">
+  <a href="{% url 'students' %}" class="btn btn-sm btn-secondary mb-3">Back to students</a>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h4>{{ student.student_name }} <small class="text-muted">({{ student.student_id.student_id }})</small></h4>
+      <p class="mb-1"><strong>Department:</strong> {{ student.department.department_name }}</p>
+      <p class="mb-1"><strong>Email:</strong> {{ student.student_email }}</p>
+      <p class="mb-1"><strong>Age:</strong> {{ student.student_age }}</p>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="mb-3">Marks</h5>
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr><th>#</th><th>Subject</th><th class="text-end">Marks</th><th class="text-end">Max</th></tr>
+          </thead>
+          <tbody>
+            {% for m in marks %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ m.subject.subject_name }}</td>
+              <td class="text-end">{{ m.marks }}</td>
+              <td class="text-end">{{ m.max_marks }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center">No marks found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between mt-3">
+        <div>
+          <strong>Total:</strong> {{ total }} / {{ max_total }}<br>
+          <strong>Percentage:</strong> {{ percentage }}%<br>
+          <strong>Grade:</strong> {{ grade }}
+        </div>
+        <div class="text-end">
+          <strong>Rank:</strong> {{ rank }}<br>
+          <strong>Class average:</strong> {{ class_average }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

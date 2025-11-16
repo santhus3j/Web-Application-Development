@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Report Card - {{ student.student_name }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'home' %}">MyApp</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="{% url 'students' %}">Students</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'receipes' %}">Recipes</a></li>
+        </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="card-title">Report Card</h4>
+        <p class="mb-1"><strong>Name:</strong> {{ student.student_name }}</p>
+        <p class="mb-1"><strong>Student ID:</strong> {{ student.student_id.student_id }}</p>
+        <p class="mb-1"><strong>Department:</strong> {{ student.department.department_name }}</p>
+
+        <hr>
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Subject</th>
+              <th class="text-end">Score</th>
+              <th class="text-end">Max</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ row.subject }}</td>
+              <td class="text-end">{{ row.score }}</td>
+              <td class="text-end">{{ row.max }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No marks found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="d-flex justify-content-between mt-3">
+          <div><strong>Total:</strong> {{ total }} / {{ max_total }}</div>
+          <div><strong>Percentage:</strong> {{ percentage }}% &nbsp;|&nbsp; <strong>Grade:</strong> {{ grade }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <h4 class="mb-3">Students</h4>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Student ID</th>
+              <th>Department</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Age</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in page_obj %}
+            <tr>
+              <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+              <td>
+  <a href="{% url 'check_marks' student.student_id.student_id %}">
+    {{ student.student_id.student_id }}
+  </a>
+</td>
+              <td>{{ student.department.department_name }}</td>
+              <td>{{ student.student_name }}</td>
+              <td>{{ student.student_email }}</td>
+              <td>{{ student.student_age }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center">No students found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
+              <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </div>
+</body>
+</html>

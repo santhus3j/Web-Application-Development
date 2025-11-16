@@ -1,0 +1,50 @@
+{% extends "base.html "%}
+{% block start%}
+
+<h1>This is the home page</h1>
+    <a href="/about">
+        About
+    </a>
+    |
+    <a href="/contact/">
+        Contact
+    </a>
+    <table class = 'container'>
+
+<style>
+    table, th, td {
+        border: 1px solid black;
+    }
+</style>
+
+    <tr >
+       <th>S no.</th>
+       <th>Name</th>
+       <th>Age</th>
+       <th>Can Vote</th>
+    </tr>
+    {% for peoples in peoples %}
+    <tr>
+     <td>{{forloop.counter}}</td>
+     <td>{{peoples.name}}</td>
+     <td>{{peoples.age}}</td>
+
+    <td {% if peoples.age >= 18 %} style="background: red"  {% endif %}>
+        {% if peoples.age >= 18 %}
+        👍
+        {% else %}
+        👎
+        {% endif %}
+    </td>
+    </tr>
+
+    {% endfor %}
+
+    </table>
+
+    <p>
+
+    {{vegetables.firstof}}
+    
+    </p>   
+{% endblock %}

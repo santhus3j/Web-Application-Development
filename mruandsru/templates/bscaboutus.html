@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B.S.C. Legacy: An Animated History</title>
+    <!-- Load Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bsc-navy': '#1D2A3A',    /* Dark Navy/Deep Blue */
+                        'bsc-gold': '#B79A5E',    /* Muted Gold/Brass */
+                        'bsc-cream': '#F8F7F5',   /* Off-White/Cream */
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Playfair Display', 'serif'], // Elegant display font
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Import Inter and Playfair Display fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #F8F7F5; /* bsc-cream */
+            scroll-behavior: smooth;
+        }
+
+        /* Full viewport height sections for "video" effect */
+        .story-slide {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+            /* Default state for animation */
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1.5s ease-out, transform 1.5s ease-out;
+            will-change: opacity, transform;
+        }
+
+        /* Target state when element is visible */
+        .story-slide.in-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Specific style for the first section to be immediately visible */
+        #slide-intro {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Subtle vertical line for visual flow (desktop only) */
+        @media (min-width: 768px) {
+            .vertical-line::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 50%;
+                width: 1px;
+                background-color: rgba(29, 42, 58, 0.2); /* bsc-navy with low opacity */
+                z-index: -1;
+            }
+        }
+
+        /* Animation for the title text on scroll */
+        .title-text {
+            display: inline-block;
+            transition: transform 0.6s ease-out;
+        }
+    </style>
+</head>
+
+<body class="text-bsc-navy">
+
+    <!-- JAVASCRIPT FOR SCROLL ANIMATION (Intersection Observer) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.story-slide');
+
+            const observerOptions = {
+                root: null, // viewport
+                rootMargin: '0px',
+                threshold: 0.2 // Trigger when 20% of the element is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Element is in view, apply the 'in-view' class
+                        entry.target.classList.add('in-view');
+                        // Optional: stop observing once animated
+                        // observer.unobserve(entry.target);
+                    } else {
+                        // Optional: uncomment the line below to reset the animation when scrolling away
+                        // entry.target.classList.remove('in-view');
+                    }
+                });
+            }, observerOptions);
+
+            slides.forEach(slide => {
+                observer.observe(slide);
+            });
+        });
+    </script>
+
+
+    <!-- SCROLL-BASED STORY SECTIONS -->
+    <main class="max-w-7xl mx-auto vertical-line relative">
+
+        <!-- 1. INTRO SLIDE -->
+        <section id="slide-intro" class="story-slide bg-bsc-navy text-bsc-cream">
+            <div>
+                <p class="font-display text-4xl sm:text-6xl mb-4 text-bsc-gold title-text">A Legacy Woven in Trust</p>
+                <h1 class="font-sans text-xl sm:text-2xl font-light tracking-wide max-w-2xl mx-auto">
+                    B.S. Channabasappa & Sons: Karnataka's Trusted Clothing Brand Since <span class="text-bsc-gold font-bold">1938</span>
+                </h1>
+            </div>
+        </section>
+
+        <!-- 2. FOUNDER SLIDE -->
+        <section class="story-slide">
+            <div class="max-w-3xl">
+                <p class="text-lg font-semibold text-bsc-gold mb-3">The Founder</p>
+                <h2 class="font-display text-4xl sm:text-6xl font-extrabold mb-6 title-text">B.S. Nanjundappa</h2>
+                <p class="font-sans text-xl sm:text-3xl font-medium leading-relaxed">
+                    He laid the foundation with a strict moral code: <br class="hidden sm:block">
+                    <span class="text-bsc-gold italic">"The customer is God, and they have to be given the best."</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- 3. SECOND GENERATION SLIDE -->
+        <section class="story-slide bg-bsc-cream/70">
+            <div class="max-w-3xl">
+                <p class="text-lg font-semibold text-bsc-gold mb-3">Second Generation</p>
+                <h2 class="font-display text-4xl sm:text-6xl font-extrabold mb-6 title-text">B.S. Channabasappa</h2>
+                <p class="font-sans text-xl sm:text-2xl leading-relaxed max-w-2xl mx-auto">
+                    Following his father's ethics, he cemented the idea of providing customers <span class="font-bold">high quality at the best price</span>. This policy developed generations of loyal customers, making B.S.C. a wedding shopping tradition.
+                </p>
+            </div>
+        </section>
+
+        <!-- 4. THIRD GENERATION SLIDE -->
+        <section class="story-slide bg-bsc-navy/5">
+            <div class="max-w-3xl">
+                <p class="text-lg font-semibold text-bsc-gold mb-3">Third Generation - The Builders</p>
+                <h2 class="font-display text-4xl sm:text-5xl font-extrabold mb-6 title-text">Umapthy, Chandrashekar, & Shivakumar</h2>
+
+                <div class="grid md:grid-cols-3 gap-6 text-sm sm:text-base">
+                    <div class="p-4 rounded-lg bg-white shadow-lg">
+                        <p class="font-bold text-bsc-gold">B.C. Umapthy</p>
+                        <p class="text-gray-700 mt-1">Joined young, helping grandfather and father build the business.</p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-white shadow-lg">
+                        <p class="font-bold text-bsc-gold">B.C. Chandrashekar</p>
+                        <p class="text-gray-700 mt-1">Worked towards making B.S.C. a household name across Karnataka.</p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-white shadow-lg">
+                        <p class="font-bold text-bsc-gold">B.C. Shivakumar</p>
+                        <p class="text-gray-700 mt-1">Developed men's clothing and introduced different categories of apparel.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. FOURTH GENERATION SLIDE -->
+        <section class="story-slide bg-bsc-navy text-bsc-cream">
+            <div class="max-w-3xl">
+                <p class="text-lg font-semibold text-bsc-gold mb-3">Fourth Generation - Innovation & Heritage</p>
+                <h2 class="font-display text-4xl sm:text-5xl font-extrabold mb-6 title-text">Shekar, Vivek, & Mrunal</h2>
+
+                <p class="font-sans text-xl sm:text-2xl leading-relaxed max-w-2xl mx-auto mb-8">
+                    The latest generation brings modern business ideas while fiercely protecting the ethical framework given by their predecessors.
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 text-sm sm:text-base text-left">
+                    <div class="p-4 rounded-lg bg-bsc-navy/80 border border-bsc-gold">
+                        <p class="font-bold text-bsc-gold">B.U.C. Shekar</p>
+                        <p class="text-bsc-cream/90 mt-1">Instrumental in introducing the hugely popular <span class="font-semibold">readymade clothing</span> segment.</p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-bsc-navy/80 border border-bsc-gold">
+                        <p class="font-bold text-bsc-gold">B.C. Vivek</p>
+                        <p class="text-bsc-cream/90 mt-1">Continues the tradition of serving customers with high quality and best practices.</p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-bsc-navy/80 border border-bsc-gold">
+                        <p class="font-bold text-bsc-gold">B.S. Mrunal</p>
+                        <p class="text-bsc-cream/90 mt-1">Part of the team dedicated to blending modern strategy with foundational ethics.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. EXPANSION & SCALE SLIDE -->
+        <section class="story-slide">
+            <div class="max-w-3xl">
+                <h2 class="font-display text-4xl sm:text-6xl font-extrabold mb-6 text-bsc-gold title-text">The Scale of Trust</h2>
+                <p class="font-sans text-xl sm:text-2xl leading-relaxed max-w-2xl mx-auto mb-8">
+                    B.S.C. has grown to occupy over <span class="text-5xl font-display font-bold text-bsc-navy block my-4">100,000 sq ft</span> of retail space, solidifying its position as one of the biggest stores in Karnataka.
+                </p>
+                <p class="text-lg font-semibold">
+                    By 2022, the brand expanded to <span class="text-bsc-gold font-bold">four branches</span>, with three located in its founding city, Davangere.
+                </p>
+            </div>
+        </section>
+
+        <!-- 7. USP / CONCLUSION SLIDE -->
+        <section class="story-slide bg-bsc-gold text-bsc-navy">
+            <div class="max-w-3xl">
+                <h2 class="font-display text-4xl sm:text-6xl font-extrabold mb-6 title-text">The B.S.C. Promise</h2>
+                <p class="font-sans text-xl sm:text-4xl font-semibold leading-relaxed max-w-2xl mx-auto">
+                    Our unique selling proposition remains unchanged:
+                </p>
+                <ul class="text-2xl sm:text-3xl font-display mt-8 space-y-3">
+                    <li><span class="font-bold">Wide variety</span> of products under one roof.</li>
+                    <li><span class="font-bold">High quality</span> that lasts.</li>
+                    <li>At the <span class="font-bold">best prices</span> possible.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- FINAL FOOTER -->
+        <footer class="py-8 bg-bsc-navy text-bsc-cream text-center">
+            <p class="text-sm opacity-70">&copy; 1938 - Present. B.S. Channabasappa & Sons. Trusted Across Generations.</p>
+        </footer>
+    </main>
+
+</body>
+</html>

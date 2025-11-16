@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mrunal & Srujana's Wedding Celebration</title>
+    <!-- Load Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Tailwind Configuration (for Inter font and primary color) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#78350F', // Dark Brown/Terracotta for elegance
+                        'secondary': '#FEF3C7', // Light creamy yellow
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'], // Elegant heading font
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Import Inter and Playfair Display fonts from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <style>
+        /* Custom CSS for a subtle background texture and scroll behavior */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F8F8; /* Very light gray/off-white */
+            scroll-behavior: smooth;
+        }
+        .hero-section {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://img.freepik.com/premium-photo/rose-background-hd-8k-wallpaper-stock-photographic_1064748-35268.jpg'); /* Replace with a real, high-res background image */
+            background-size: cover;
+            background-position: center;
+            min-height: 85vh; /* Responsive height for the hero */
+        }
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(to right, #F8F8F8, #78350F, #F8F8F8);
+            width: 50%;
+            margin: 1.5rem auto;
+        }
+
+        /* FADE-IN ANIMATION for all sections */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0; /* Start invisible */
+        }
+    </style>
+</head>
+
+<body class="text-gray-800">
+
+    <!-- 1. NAVIGATION BAR (Hidden on Mobile, Sticky on Desktop) -->
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-md hidden md:block">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-center h-16">
+                <div class="flex space-x-8">
+                    <a href="#home" class="text-primary hover:text-gray-900 px-3 py-5 text-sm font-medium transition duration-150">Home</a>
+                    <a href="#story" class="text-gray-600 hover:text-primary px-3 py-5 text-sm font-medium transition duration-150">Our Story</a>
+                    <a href="#events" class="text-gray-600 hover:text-primary px-3 py-5 text-sm font-medium transition duration-150">Events</a>
+                    <a href="#gallery" class="text-gray-600 hover:text-primary px-3 py-5 text-sm font-medium transition duration-150">Gallery</a>
+                    <a href="{% url 'bscaboutus' %}" class="text-gray-600 hover:text-primary px-3 py-5 text-sm font-medium transition duration-150">About us</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 2. HERO SECTION -->
+    <header id="home" class="hero-section flex items-center justify-center text-center p-6 shadow-xl">
+        <div class="bg-black/40 rounded-xl p-8 md:p-12 max-w-lg mx-auto shadow-2xl">
+            <h4 class="text-secondary text-base md:text-xl font-sans tracking-widest uppercase mb-4">You are Invited to the Wedding of</h4>
+            <h1 class="font-serif text-5xl md:text-8xl text-white font-bold mb-4 leading-tight">
+                Mrunal
+                <span class="text-primary mx-2">&amp;</span>
+                Srujana
+            </h1>
+            <p class="text-secondary text-lg md:text-2xl font-serif italic mb-6">
+                Two Souls, One Journey
+            </p>
+            <a href="#events" class="inline-block px-8 py-3 bg-primary text-white font-medium text-sm uppercase tracking-wider rounded-full hover:bg-yellow-700 transition duration-300 shadow-lg">
+                View Event Details
+            </a>
+        </div>
+    </header>
+
+    <!-- 3. OUR STORY SECTION (Animated) -->
+    <section id="story" class="py-16 md:py-24 bg-white fade-in" style="animation-delay: 0.2s;">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="font-serif text-3xl md:text-4xl text-primary mb-4 font-semibold">Our Journey</h2>
+            <p class="text-gray-600 mb-8">
+                The greatest adventure is falling in love. We can't wait to celebrate our next chapter with you.
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8 items-start text-left">
+                <!-- Groom's Intro -->
+                <div class="p-6 rounded-xl border border-secondary shadow-md hover:shadow-lg transition duration-300">
+                    <h3 class="font-serif text-xl font-bold text-primary mb-2">About Mrunal (The Groom)</h3>
+                    <p class="text-gray-700">
+                        Mrunal, a successful entrepreneur, is the life of the party and a man of great vision. He enjoys playing cricket and reading history. He promises a lifetime of laughter and unwavering support.
+                    </p>
+                </div>
+                <!-- Bride's Intro -->
+                <div class="p-6 rounded-xl border border-secondary shadow-md hover:shadow-lg transition duration-300">
+                    <h3 class="font-serif text-xl font-bold text-primary mb-2">About Srujana (The Bride)</h3>
+                    <p class="text-gray-700">
+                        Srujana, a brilliant architect, is known for her quiet strength and vibrant spirit. She loves painting and spending time outdoors. Her heart is as warm as her smile, and she looks forward to building their future together.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- 4. EVENT DETAILS SECTION (Animated) -->
+    <section id="events" class="py-16 md:py-24 bg-secondary/50 fade-in" style="animation-delay: 0.4s;">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="font-serif text-3xl md:text-4xl text-primary mb-8 font-semibold">The Celebrations</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Event 1: Sangeet -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-primary/70">
+                    <h3 class="font-serif text-2xl font-bold text-gray-800 mb-2">Sangeet & Mehendi</h3>
+                    <p class="text-lg text-primary mb-2">Friday, December 10th</p>
+                    <p class="text-gray-600">7:00 PM onwards</p>
+                    <p class="text-sm italic mt-4">The Grand Ballroom, Oberoi Towers, Mumbai.</p>
+                </div>
+
+                <!-- Event 2: Wedding Ceremony -->
+                <div class="bg-white p-6 rounded-xl shadow-2xl transform scale-105 border-t-4 border-primary">
+                    <h3 class="font-serif text-2xl font-bold text-gray-800 mb-2">The Wedding Ceremony</h3>
+                    <p class="text-lg text-primary mb-2">Saturday, December 11th</p>
+                    <p class="text-gray-600">11:00 AM Muhurat</p>
+                    <p class="text-sm italic mt-4">Temple Gardens, Sea Face, Mumbai.</p>
+                </div>
+
+                <!-- Event 3: Reception -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-primary/70">
+                    <h3 class="font-serif text-2xl font-bold text-gray-800 mb-2">Grand Reception</h3>
+                    <p class="text-lg text-primary mb-2">Saturday, December 11th</p>
+                    <p class="text-gray-600">7:30 PM onwards</p>
+                    <p class="text-sm italic mt-4">The Emperor's Palace, Worli, Mumbai.</p>
+                </div>
+            </div>
+
+            <div class="mt-12">
+                 <p class="text-gray-700 text-lg">We can't wait to share this beautiful day with you!</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- 5. PHOTO GALLERY SECTION (Animated) -->
+    <section id="gallery" class="py-16 md:py-24 bg-white fade-in" style="animation-delay: 0.6s;">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="font-serif text-3xl md:text-4xl text-primary mb-8 font-semibold">Our Best Moments</h2>
+
+            <!-- PHOTO GRID: This grid is 1 column on mobile, 2 on tablet/small desktop, and 3 on large desktop. -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- PHOTO PATH INSTRUCTION: Replace the 'src' attribute for each image below with the public URL of your couple's photos. -->
+
+                <!-- Photo 1 -->
+                <div class="rounded-xl overflow-hidden shadow-xl transform hover:scale-[1.02] transition duration-300">
+                    <img src="https://placehold.co/600x400/78350F/FFFFFF?text=Mrunal+%26+Srujana+1" alt="Mrunal and Srujana at the beach" class="w-full h-auto object-cover aspect-[4/3]">
+                </div>
+
+                <!-- Photo 2 -->
+                <div class="rounded-xl overflow-hidden shadow-xl transform hover:scale-[1.02] transition duration-300">
+                    <img src="https://placehold.co/600x400/A16207/FFFFFF?text=Mrunal+%26+Srujana+2" alt="Mrunal and Srujana engagement" class="w-full h-auto object-cover aspect-[4/3]">
+                </div>
+
+                <!-- Photo 3 (Vertical Example) -->
+                <div class="rounded-xl overflow-hidden shadow-xl transform hover:scale-[1.02] transition duration-300">
+                    <img src="https://placehold.co/600x800/4B5563/FFFFFF?text=Mrunal+%26+Srujana+3" alt="Mrunal and Srujana smiling" class="w-full h-auto object-cover aspect-[3/4]">
+                </div>
+
+                <!-- Photo 4 -->
+                <div class="rounded-xl overflow-hidden shadow-xl transform hover:scale-[1.02] transition duration-300">
+                    <img src="https://placehold.co/600x400/991B1B/FFFFFF?text=Mrunal+%26+Srujana+4" alt="Mrunal and Srujana traveling" class="w-full h-auto object-cover aspect-[4/3]">
+                </div>
+
+                <!-- Photo 5 -->
+                <div class="rounded-xl overflow-hidden shadow-xl transform hover:scale-[1.02] transition duration-300">
+                    <img src="https://placehold.co/600x400/374151/FFFFFF?text=Mrunal+%26+Srujana+5" alt="Mrunal and Srujana friends" class="w-full h-auto object-cover aspect-[4/3]">
+                </div>
+
+                <!-- Photo 6 -->
+                <div class="rounded-xl overflow-hidden shadow-xl transform hover:scale-[1.02] transition duration-300">
+                    <img src="https://placehold.co/600x400/D97706/FFFFFF?text=Mrunal+%26+Srujana+6" alt="Mrunal and Srujana enjoying dinner" class="w-full h-auto object-cover aspect-[4/3]">
+                </div>
+
+                <div class="col-span-1 sm:col-span-2 lg:col-span-3 flex items-center justify-center">
+                    <div class="w-full text-center bg-gradient-to-r from-pink-100 via-yellow-50 to-amber-100 rounded-2xl p-6 shadow-lg border border-white/30">
+                        <p class="font-serif text-2xl md:text-3xl mb-3">
+                            <span class="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                                Want to see our family's legacy?
+                            </span>
+                            <a href="{% url 'bscaboutus' %}" class="inline-block ml-4 px-4 py-2 bg-white text-primary font-bold rounded-full shadow-sm hover:scale-105 transition transform">
+                                View the B.S.C. Story
+                            </a>
+                        </p>
+                    </div>
+                </div></div>
+
+                <!-- You can add more photos here! -->
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. FOOTER SECTION -->
+    <footer class="bg-primary py-8">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
+            <p class="font-serif text-2xl mb-2">Mrunal & Srujana</p>
+            <p class="text-sm opacity-80">With the blessings of our elders and the love of our family and friends, our journey begins.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
